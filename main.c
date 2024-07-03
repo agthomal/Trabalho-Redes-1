@@ -79,10 +79,7 @@ int main(int argc, char *argv[]) {
     int s = cria_raw_socket("lo");
     int t = cria_raw_socket("lo");
 
-    // Necessario adicionar um byte a mais para definir o fim das strings
     char teste[TAM_MSG], teste2[TAM_MSG];
-    // teste[TAM_MSG] = '\0';
-    // teste2[TAM_MSG] = '\0';
     char arqsaida[50];
 
     FILE* arq1 = fopen(argv[1], "r");
@@ -93,8 +90,6 @@ int main(int argc, char *argv[]) {
     char c;
     for (;;) {
         size_t leituraArq = fread(teste, 1, sizeof teste, arq1);
-
-        //for (int i = 0; i < leituraArq; i++)
 
         if (leituraArq == 0)
             break;
@@ -110,23 +105,13 @@ int main(int argc, char *argv[]) {
         while (strlen(teste2) == 0 && strlen(teste) != 0) {
             envio = send(s, teste, buf_size, 0);
             recebe = recebe_mensagem(t, 200, teste2, buf_size);
-            printf("%s\n", teste);
             printf("Bloco nao conseguiu ser enviado. Tentando novamente\n");
-            //printf("%s\n", teste);
         }
         if (buf_size > leituraArq)
             teste2[leituraArq] = '\0';
         printf("Bloco enviado com %ld chars\n", leituraArq);
-        // fprintf(arq2, "%s", teste2);
         fwrite(teste2, leituraArq, 1, arq2);
     }
     fclose(arq1);
     fclose(arq2);
-
-    //
-    //
-    // Problema notavel: as vezes o arquivo nao consegue receber um bloco. Isso nao acontece sempre, nao sei a origem do problema
-    // Outro problema: Se um bloco tem menos de 14, o arquivo nunca envia
-    //
-    //
 }
