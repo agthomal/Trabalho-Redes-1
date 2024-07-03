@@ -8,7 +8,7 @@
 #include <net/if.h>
 #include <sys/time.h>
 
-#define TAM_MSG 128
+#define TAM_MSG 0x800
 #define TAM_MIN 14
 
 int cria_raw_socket(char* nome_interface_rede) {
@@ -78,9 +78,11 @@ int main(int argc, char *argv[]) {
     // lo: LOOPBACK(Maquina envia pra si mesma)
     int s = cria_raw_socket("lo");
     int t = cria_raw_socket("lo");
-    char teste[TAM_MSG+1], teste2[TAM_MSG+1];
-    teste[TAM_MSG] = '\0';
-    teste2[TAM_MSG] = '\0';
+
+    // Necessario adicionar um byte a mais para definir o fim das strings
+    char teste[TAM_MSG], teste2[TAM_MSG];
+    // teste[TAM_MSG] = '\0';
+    // teste2[TAM_MSG] = '\0';
     char arqsaida[50];
 
     FILE* arq1 = fopen(argv[1], "r");
@@ -89,36 +91,34 @@ int main(int argc, char *argv[]) {
     FILE* arq2 = fopen(arqsaida, "w+");
 
     char c;
-    while (c != EOF) {
-        int i = 0;
-        while (c != EOF && i < TAM_MSG) {
-            c = fgetc(arq1);
-            teste[i] = c;
-            i++;
-        }
-        if(c == EOF) {
-            teste[i-1] = '\0';
-            teste[i] = EOF;
-            printf("end of file\n");
-        }
+    for (;;) {
+        size_t leituraArq = fread(teste, 1, sizeof teste, arq1);
 
+        //for (int i = 0; i < leituraArq; i++)
+
+        if (leituraArq == 0)
+            break;
         int buf_size;
-        if (i < TAM_MIN)
+        if (leituraArq < TAM_MIN)
             buf_size = TAM_MIN;
         else
-            buf_size = i;
+            buf_size = leituraArq;
+
         int envio = send(s, teste, buf_size, 0);
         int recebe = recebe_mensagem(t, 200, teste2, buf_size);
-        while (strlen(teste2) == 0 && i > 1) {
+
+        while (strlen(teste2) == 0 && strlen(teste) != 0) {
             envio = send(s, teste, buf_size, 0);
             recebe = recebe_mensagem(t, 200, teste2, buf_size);
+            printf("%s\n", teste);
             printf("Bloco nao conseguiu ser enviado. Tentando novamente\n");
             //printf("%s\n", teste);
         }
-        if (buf_size > i)
-            teste2[i] = '\0';
-        // printf("Bloco enviado com %d chars\n", i);
-        fprintf(arq2, "%s", teste2);
+        if (buf_size > leituraArq)
+            teste2[leituraArq] = '\0';
+        printf("Bloco enviado com %ld chars\n", leituraArq);
+        // fprintf(arq2, "%s", teste2);
+        fwrite(teste2, leituraArq, 1, arq2);
     }
     fclose(arq1);
     fclose(arq2);
