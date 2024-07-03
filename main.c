@@ -8,6 +8,8 @@
 #include <net/if.h>
 #include <sys/time.h>
 
+#define TAM_MSG 128
+#define TAM_MIN 14
 
 int cria_raw_socket(char* nome_interface_rede) {
     // Cria arquivo para o socket sem qualquer protocolo
@@ -68,15 +70,63 @@ int recebe_mensagem(int soquete, int timeoutMillis, char* buffer, int tamanho_bu
     return -1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Inserir arquivo no argumento\n");
+        return 0;
+    }
     // lo: LOOPBACK(Maquina envia pra si mesma)
     int s = cria_raw_socket("lo");
     int t = cria_raw_socket("lo");
-    char teste[100];
-    char teste2[100];
-    //strcpy(teste, "Esse eh um teste que eu estou fazendo nesse exato momento.");
-    scanf("%s", teste);
-    int envio = send(s, teste, sizeof(teste), 0);
-    int recebe = recebe_mensagem(t, 300, teste2, sizeof(teste2));
-    printf("%s\n", teste2);
+    char teste[TAM_MSG+1], teste2[TAM_MSG+1];
+    teste[TAM_MSG] = '\0';
+    teste2[TAM_MSG] = '\0';
+    char arqsaida[50];
+
+    FILE* arq1 = fopen(argv[1], "r");
+    printf("insira o nome do arquivo de saida: ");
+    scanf("%s", arqsaida);
+    FILE* arq2 = fopen(arqsaida, "w+");
+
+    char c;
+    while (c != EOF) {
+        int i = 0;
+        while (c != EOF && i < TAM_MSG) {
+            c = fgetc(arq1);
+            teste[i] = c;
+            i++;
+        }
+        if(c == EOF) {
+            teste[i-1] = '\0';
+            teste[i] = EOF;
+            printf("end of file\n");
+        }
+
+        int buf_size;
+        if (i < TAM_MIN)
+            buf_size = TAM_MIN;
+        else
+            buf_size = i;
+        int envio = send(s, teste, buf_size, 0);
+        int recebe = recebe_mensagem(t, 200, teste2, buf_size);
+        while (strlen(teste2) == 0 && i > 1) {
+            envio = send(s, teste, buf_size, 0);
+            recebe = recebe_mensagem(t, 200, teste2, buf_size);
+            printf("Bloco nao conseguiu ser enviado. Tentando novamente\n");
+            //printf("%s\n", teste);
+        }
+        if (buf_size > i)
+            teste2[i] = '\0';
+        // printf("Bloco enviado com %d chars\n", i);
+        fprintf(arq2, "%s", teste2);
+    }
+    fclose(arq1);
+    fclose(arq2);
+
+    //
+    //
+    // Problema notavel: as vezes o arquivo nao consegue receber um bloco. Isso nao acontece sempre, nao sei a origem do problema
+    // Outro problema: Se um bloco tem menos de 14, o arquivo nunca envia
+    //
+    //
 }
