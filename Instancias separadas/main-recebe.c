@@ -9,8 +9,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "mensagem.h"
+
 #define TAM_MSG 0x8000
 #define TAM_MIN 14
+#define OFFSET 3
 
 int cria_raw_socket(char* nome_interface_rede) {
     // Cria arquivo para o socket sem qualquer protocolo
@@ -55,7 +58,7 @@ long long timestamp() {
 int protocolo_e_valido(char* buffer, int tamanho_buffer) {
     if (tamanho_buffer <= 0) { return 0; }
     // insira a sua validação de protocolo aqui
-    // return buffer[0] == 0x7f;
+    return buffer[0] == 0x7f;
     return 1;
 }
  
@@ -81,38 +84,39 @@ int main(int argc, char *argv[]) {
     int t = cria_raw_socket("lo");
     // int t = cria_raw_socket("lo");
 
-    char buffer[TAM_MSG];
+    char buffer[TAM_MSG + OFFSET];
 
     FILE* arq1 = fopen(argv[1], "w+");
 
     char c;
     for (;;) {
-        int recebe = recebe_mensagem(t, 200, buffer, TAM_MSG);
+        int recebe = recebe_mensagem(t, 200, buffer, TAM_MSG + OFFSET);
         //
         //
         // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
         //
         //
         if (recebe != -1) {
-            recebe = recebe_mensagem(t, 200, buffer, TAM_MSG);
+            recebe = recebe_mensagem(t, 200, buffer, TAM_MSG + OFFSET);
         }
         /*if (strlen(buffer) == 0)
             printf("Falhou\n");
         else
             printf("%ld\n", strlen(buffer)); */
 
-        if (buffer[0] == 0x04 && buffer[1] == '\0') {
+        if (buffer[1] == 0x04 && buffer[2] == '\0') {
             break;
         }
+        // printf("%s\n", buffer);
 
         /*while (strlen(buffer2) == 0 && strlen(buffer) != 0) {
             envio = send(s, buffer, buf_size, 0);
             recebe = recebe_mensagem(t, 200, buffer2, buf_size);
             printf("Bloco nao conseguiu ser enviado. Tentando novamente\n");
         } */
-        if (strlen(buffer) > 0) {
-            fwrite(buffer, recebe, 1, arq1);
-            printf("%ld\n", strlen(buffer));
+        if (recebe != -1 && strlen(buffer) > 0) {
+            fwrite(buffer + OFFSET, recebe - OFFSET, 1, arq1);
+            printf("%d\n", obtem_sequencia(buffer));
         }
         sleep(1);
     }

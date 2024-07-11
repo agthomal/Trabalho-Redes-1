@@ -9,8 +9,11 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "mensagem.h"
+
 #define TAM_MSG 0x8000
 #define TAM_MIN 14
+#define OFFSET 3
 
 int cria_raw_socket(char* nome_interface_rede) {
     // Cria arquivo para o socket sem qualquer protocolo
@@ -80,7 +83,7 @@ int main(int argc, char *argv[]) {
     int s = cria_raw_socket("lo");
     // int t = cria_raw_socket("lo");
 
-    char buffer[TAM_MSG];
+    char buffer[TAM_MSG + OFFSET];
 
     FILE* arq1 = fopen(argv[1], "r");
     /* printf("insira o nome do arquivo de saida: ");
@@ -88,21 +91,24 @@ int main(int argc, char *argv[]) {
     FILE* arq2 = fopen("teste.jpg", "w+");
 
     char c;
+    int seq = 0;
     for (;;) {
-        size_t leituraArq = fread(buffer, 1, sizeof buffer, arq1);
-        printf("%ld\n", leituraArq);
+        size_t leituraArq = fread(buffer + OFFSET, 1, sizeof buffer - OFFSET, arq1);
+        prepara_mensagem(buffer, 0x7f, leituraArq, seq, 0b10010);
+        seq++;
+        buffer[leituraArq + OFFSET] = '\0';
 
         if (leituraArq == 0)
             break;
         if (leituraArq < TAM_MSG) {
-            buffer[leituraArq] = '\0';
+            for (int i = leituraArq + OFFSET; i < OFFSET + TAM_MSG; i++)
+                buffer[i] = '\0';
         }
 
         int envio;
         if (strlen(buffer) != 0) {
-            envio = send(s, buffer, TAM_MSG, 0);
+            envio = send(s, buffer, TAM_MSG + OFFSET, 0);
             // printf("%s\n", buffer);
-            printf("%ld\n", strlen(buffer));
         }
         // printf("%d\n", envio);
         // int recebe = recebe_mensagem(t, 200, buffer2, buf_size);
@@ -118,9 +124,13 @@ int main(int argc, char *argv[]) {
         fwrite(buffer, leituraArq, 1, arq2);
         sleep(1);
     }
-    buffer[0] = 0x04;
-    buffer[1] = '\0';
+
+    // indicador temporario pro fim da mensagem
+    buffer[0] = 0x7f;
+    buffer[1] = 0x04;
+    buffer[2] = '\0';
     int envio = send(s, buffer, 14, 0);
+    envio = send(s, buffer, 14, 0);
     fclose(arq1);
     fclose(arq2);
 }
