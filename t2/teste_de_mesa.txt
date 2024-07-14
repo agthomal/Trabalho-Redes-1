@@ -1,0 +1,59 @@
+1 -> PORTA 32000
+2 -> PORTA 32001
+3 -> PORTA 32002
+4 -> PORTA 32003
+
+dealer
+--------
+1 -> 2 (jogar na porta do 2)
+1 -> 3 (jogar na porta do 3)
+1 -> 4 (jogar na porta do 4)
+
+jogar
+--------
+
+./jogo 32000
+./jogo 32001
+./jogo 32002
+./jogo 32003
+
+enviar;
+
+if (argv[1] % 32000 == 0) -> enviar = 1;
+else -> enviar = 0;
+
+envia n-1 vezes
+
+muda para o proximo a enviar 
+
+1º c | c | c | c | c e = 32000
+2º c | c | c | c | c r = 32001
+3º c | c | c | c | c r = 32002
+4º c | c | c | c | c r = 32003
+
+1 rodada
+print cartas da 32000
+
+distribui as cartas para porta 32001
+print cartas da 32001
+
+distribui as cartas para porta 32002
+print as cartas da 32002
+
+distribui as cartas para porta 32003
+print as cartas da 32003
+
+2 rodada
+joga a carta para a 32000
+joga a carta para a 32002
+joga a carta para a 32003
+
+programa 0 - 32000
+envia = 1
+distribui as cartas
+print cartas
+
+programa 1 - 32001
+envia = 0
+recebe as cartas
+print cartas
