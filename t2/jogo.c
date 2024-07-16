@@ -17,29 +17,55 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define N 2
+#include "carta.h"
+
+#define N 4
 #define IP_ADRESS "192.168.0.166"
 #define BUFFER_SIZE 1024
 
 int main (int argc, char **argv) {
-    int ports[N] = {32000, 32001};
-    int port = ports[atoi (argv[1])];
-    int envia = 0, dealer = 0, n_cartas, carta, naipe;
-    int cartas_numeros[10] = {4, 5, 6, 7, 8, 9, 10, 1, 2, 3};
-    int cartas_naipes[4] = {1, 2, 3, 4};
+    int envia = 0, dealer = 0, n_times, n_cards;
 
+    /* portas para envio das informacoes */
+    int ports[N] = {32000, 32001, 32002, 32003};
+    int port     = ports[atoi (argv[1])], next_port;
+
+    /* inicializa as cartas */
+    card cards[5];
+    for (int i = 0; i < 5; i++) {
+        cards[i].value = -1;
+        cards[i].suit  = -1;
+    }
+    
+    /* jogador 0 eh sempre o primeiro dealer */
     if ((port % 32000) == 0) {
         envia  = 1;
         dealer = 1;
+
+        /* VALOR TESTE, NÃO EH CONSTANTE */
+        n_times = N * 5;
+
+        /* indica a proxima porta que ira enviar a carta */
+        next_port = 32000;
     }
 
     srand (time (NULL));
+
+    printf ("# jogador %d\n", atoi (argv[1]));
     
     while (1) {
         if (envia) {
+            /* inicializa socket */
             int sockfd;
             struct sockaddr_in server_addr;
-            char mensagem[BUFFER_SIZE];
+            card aux_card;
+
+            /* VALOR MAXIMO, MAS BOM USAR MALLOC */
+            card used_cards[20];
+            for (int i = 0; i < 20; i++) {
+                used_cards[i].value = -1;
+                used_cards[i].suit  = -1;
+            }
 
             if ((sockfd = socket (AF_INET, SOCK_DGRAM, 0)) < 0) {
                 perror ("erro ao criar socket");
@@ -49,36 +75,41 @@ int main (int argc, char **argv) {
             memset (&server_addr, 0, sizeof (server_addr));
             server_addr.sin_family = AF_INET;
             server_addr.sin_addr.s_addr = inet_addr (IP_ADRESS);
+            /* inicializa socket */
+            
+            /* distribui n_cartas */
+            for (int i = 0; i < n_times; i++) {
+                /* verifica a porta que ira receber */
+                if (next_port == port) {
+                    cards[i * N] = get_card (used_cards);
 
-            if (dealer)
-                n_cartas = (N - 1) * 3;
-            else
-                n_cartas = N - 1;
+                    print_card (cards[i * N]);
 
-            for (int i = 0; i < n_cartas; i++) {
-                if (ports[i] != port)
-                    server_addr.sin_port = htons (ports[i]);
-                else
-                    server_addr.sin_port = htons (ports[i + 1]);
+                    used_cards[i] = cards[i * N];
 
-                if (!dealer) {
-                    printf ("# mensagem: ");
-                    fgets (mensagem, BUFFER_SIZE, stdin);
+                    next_port++;
+                    if (next_port == 32004)
+                        next_port = 32000;
                 }
+
                 else {
-                    carta = rand() % (9 - 0 + 1) + 0;
-                    naipe = rand() % (3 - 0 + 1) + 0;
-                    printf ("| %d %d ", cartas_numeros[carta], cartas_naipes[naipe]);
+                    server_addr.sin_port = htons(next_port);
 
-                    carta = rand() % (9 - 0 + 1) + 0;
-                    naipe = rand() % (3 - 0 + 1) + 0;
-                    sprintf (mensagem, "%d %d", cartas_numeros[carta], cartas_naipes[naipe]);
+                    aux_card = get_card (used_cards);
+                    
+                    sendto (sockfd, &aux_card, sizeof (aux_card), 0, (struct sockaddr *) &server_addr, sizeof (server_addr));
+
+                    used_cards[i] = aux_card;
+
+                    next_port++;
+                    if (next_port == 32004)
+                        next_port = 32000;
                 }
-
-                sendto (sockfd, mensagem, strlen (mensagem), 0, (struct sockaddr *) &server_addr, sizeof (server_addr));
-
-                memset (mensagem, 0, BUFFER_SIZE);
             }
+
+            exit (0);
+
+            envia = 0;
 
             close (sockfd);
         }
@@ -87,7 +118,7 @@ int main (int argc, char **argv) {
             int sockfd, n;
             struct sockaddr_in server_addr, client_addr;
             socklen_t client_len = sizeof (client_addr);
-            char mensagem[BUFFER_SIZE];
+            card aux_card;
 
             if ((sockfd = socket (AF_INET, SOCK_DGRAM, 0)) < 0) {
                 perror ("erro ao criar socket");
@@ -103,20 +134,17 @@ int main (int argc, char **argv) {
                 perror("erro ao realizar a bind");
                 exit(0);
             }
-
-            printf ("# esperando...\n");
-
-            for (int i = 0; i < (N - 1); i++) {
-                n = recvfrom (sockfd, mensagem, BUFFER_SIZE, 0, (struct sockaddr *) &client_addr, &client_len);
+            
+            /* VALOR TESTE, NÃO EH CONSTATE */
+            for (int i = 0; i < 5; i++) {
+                n = recvfrom (sockfd, &aux_card, BUFFER_SIZE, 0, (struct sockaddr *) &client_addr, &client_len);
 
                 if (n < 0) {
                     perror ("erro ao receber mensagem");
                     exit (0);
                 }
 
-                mensagem[n] = '\0';
-
-                printf ("%s", mensagem);
+                print_card (aux_card);
             }
 
             close (sockfd);
