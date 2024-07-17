@@ -11,7 +11,7 @@
 
 #include "mensagem.h"
 
-#define TAM_MSG 0x8000
+#define TAM_MSG 63
 #define TAM_MIN 14
 #define OFFSET 3
 
@@ -35,8 +35,11 @@ int main(int argc, char *argv[]) {
     int seq = 0;
     for (;;) {
         size_t leituraArq = fread(buffer + OFFSET, 1, sizeof buffer - OFFSET, arq1);
+        printf("%ld\n", leituraArq);
         prepara_mensagem(buffer, 0x7f, leituraArq, seq, 0b10010);
         seq++;
+        if (seq >= 32)
+            seq = 0;
         buffer[leituraArq + OFFSET] = '\0';
 
         if (leituraArq == 0)
@@ -51,17 +54,7 @@ int main(int argc, char *argv[]) {
             envio = send(s, buffer, TAM_MSG + OFFSET, 0);
             // printf("%s\n", buffer);
         }
-        // printf("%d\n", envio);
-        // int recebe = recebe_mensagem(t, 200, buffer2, buf_size);
 
-        /*while (strlen(buffer2) == 0 && strlen(buffer) != 0) {
-            envio = send(s, buffer, buf_size, 0);
-            recebe = recebe_mensagem(t, 200, buffer2, buf_size);
-            printf("Bloco nao conseguiu ser enviado. Tentando novamente\n");
-        }
-        if (buf_size > leituraArq)
-            buffer2[leituraArq] = '\0';
-        printf("Bloco enviado com %ld chars\n", leituraArq); */
         fwrite(buffer, leituraArq, 1, arq2);
         sleep(1);
     }

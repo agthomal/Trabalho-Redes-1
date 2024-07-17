@@ -11,7 +11,7 @@
 
 #include "mensagem.h"
 
-#define TAM_MSG 0x8000
+#define TAM_MSG 63
 #define TAM_MIN 14
 #define OFFSET 3
 
@@ -39,23 +39,16 @@ int main(int argc, char *argv[]) {
         if (recebe != -1) {
             recebe = recebe_mensagem(t, 200, buffer, TAM_MSG + OFFSET);
         }
-        /*if (strlen(buffer) == 0)
-            printf("Falhou\n");
-        else
-            printf("%ld\n", strlen(buffer)); */
 
         if (buffer[1] == 0x04 && buffer[2] == '\0') {
             break;
         }
-        // printf("%s\n", buffer);
 
-        /*while (strlen(buffer2) == 0 && strlen(buffer) != 0) {
-            envio = send(s, buffer, buf_size, 0);
-            recebe = recebe_mensagem(t, 200, buffer2, buf_size);
-            printf("Bloco nao conseguiu ser enviado. Tentando novamente\n");
-        } */
         if (recebe != -1 && strlen(buffer) > 0) {
-            fwrite(buffer + OFFSET, recebe - OFFSET, 1, arq1);
+            int tam = obtem_tamanho(buffer);
+            printf("Tamanho: %d\n", tam);
+            // fwrite(buffer + OFFSET, recebe - OFFSET, 1, arq1);
+            fwrite(buffer + OFFSET, tam, 1, arq1);
             printf("%d\n", obtem_sequencia(buffer));
         }
         sleep(1);
