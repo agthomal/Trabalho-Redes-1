@@ -1,7 +1,7 @@
 #ifndef CARTA_H
 #define CARTA_H
 
-typedef struct card {
+typedef struct cardz {
     int value, suit;
 } card;
 

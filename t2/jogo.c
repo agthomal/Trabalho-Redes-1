@@ -20,7 +20,7 @@
 #include "carta.h"
 
 #define N 4
-#define IP_ADRESS "192.168.0.166"
+#define IP_ADRESS "192.168.0.62"
 #define BUFFER_SIZE 1024
 
 int main (int argc, char **argv) {
@@ -93,7 +93,7 @@ int main (int argc, char **argv) {
                 }
 
                 else {
-                    server_addr.sin_port = htons(next_port);
+                    server_addr.sin_port = htons (next_port);
 
                     aux_card = get_card (used_cards);
                     
