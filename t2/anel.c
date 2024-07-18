@@ -1,12 +1,24 @@
-#include "socket.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
-#include "socket.h"
-#include "carta.h"
+#include <time.h>
 
 #define IP_ADRESS "127.0.0.1"
+
+/*
+ * 0 > 32001 && 0 < 32000
+ * 1 > 32002 && 1 < 32001
+ * 2 > 32003 && 2 < 32002
+ * 3 > 32000 && 3 < 32003 
+ */
+
+typedef struct package_t {
+    int remetente, destinatario, recebido, lido;
+    char message[1024];
+} package_t ;
 
 int ports[4] = {32000, 32001, 32002, 32003};
 
@@ -89,7 +101,8 @@ void recieve_message (package_t package, int id) {
     }
     else {
         if (package.destinatario == id) {
-            print_card (package.current_card);
+            package.message[n] = '\0';
+            printf ("# %s\n", package.message);
             
             package.lido = 1;
             package.recebido = 1;
@@ -114,4 +127,28 @@ void recieve_message (package_t package, int id) {
     }
 
     close (sockfd);
+}
+
+int main (int argc, char **argv) {
+    int envia = 0;
+
+    if (atoi (argv[1]) == 0) 
+        envia = 1;
+    
+    package_t package;
+
+    package.remetente = 0;
+    package.destinatario = 2;
+    package.recebido = 0;
+    package.lido = 0;
+    strcpy (package.message, "bastao chegou");
+
+    while (1) {
+        if (envia) 
+            send_message (package, atoi (argv[1]));
+
+        recieve_message (package, atoi (argv[1]));
+    }
+
+    return 0;
 }
