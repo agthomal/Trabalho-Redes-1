@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "carta.h"
+#include "card.h"
 
 /* cartas com codigo da tabela ascii */
 int values[10] = {52, 53, 54, 55, 81, 74, 75, 65, 50, 51};
@@ -14,7 +14,7 @@ int values[10] = {52, 53, 54, 55, 81, 74, 75, 65, 50, 51};
  * 4 = paus
  */
 int suits[4]   = {1, 2, 3, 4};
-
+/*
 void print_card (card current_card) {
     char suit_draw[4];
 
@@ -33,7 +33,8 @@ void print_card (card current_card) {
     printf ("|   %s |\n", suit_draw);
     printf ("|_____|\n");
 }
-
+*/
+/*
 int verify_card (card *used_cards, card current_card) {
     int i = 0;
 
@@ -47,7 +48,8 @@ int verify_card (card *used_cards, card current_card) {
 
     return 1;
 }
-
+*/
+/*
 card get_card (card *used_cards) {
     card current_card;
 
@@ -61,3 +63,4 @@ card get_card (card *used_cards) {
 
     return current_card;
 }
+*/
