@@ -1,6 +1,19 @@
 #ifndef MENSAGEM
 #define MENSAGEM
 
+#define ACK 0b00000
+#define NACK 0b00001
+#define LISTA 0b01010
+#define BAIXAR 0b01011
+#define MOSTRA 0b10000
+#define DESCRITOR 0b10001
+#define DADOS 0b10010
+#define FIM_TX 0b11110
+#define ERRO 0b11111
+
+#define M_ENVIA 0
+#define M_RECEBE 1
+
 int cria_raw_socket(char* nome_interface_rede);
 
 long long timestamp();
