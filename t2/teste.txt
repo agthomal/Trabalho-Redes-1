@@ -1,14 +1,30 @@
-INICIO
+info
+    int dealer
+    int starter
+    int n_rounds
+    int current_round
+    int n_cards[4]
+    int n_wins[4]
+    card_t cards[4]
 
-cada jogador tem 5 cartas
+cada rodada
+    int dealer
+    int n_rounds
+    n_cards[4]
+    n_wins[4]
 
-dealer (0) x 5
-    distribui para 0 (n envia nada)
-    distribui para 1 (envia)
-        0 > 1 > 2 > 3 > 0
-        se recebido == 1
-            prox
-        se nao
-            envia denovo
-    distribui para 2 (envia)
-    distribui para 3 (envia)
+cada jogada
+    int starter
+    int current_round
+    card_t cards[4]
+
+// antes de entregar as cartas
+dealer = 0
+starter = dealer -> prox
+n_cards[4] = {5, 5, 5, 5}
+n_rounds = max{5, 5, 5, 5}
+
+// depois de entregar as cartas
+n_wins[4]
+current_round
+card_t cards
