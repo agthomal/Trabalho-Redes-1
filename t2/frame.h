@@ -15,13 +15,13 @@ typedef struct info_t {
 
 typedef enum data_type {
     CARD,
-    MESSAGE,
+    PRINT,
 } data_type;
 
 // 8 bytes
 typedef union data_t {
     card_t card;
-    char message[BUFFER_SIZE];
+    char print[BUFFER_SIZE];
 } data_t;
 
 // 10 bytes
@@ -35,10 +35,8 @@ typedef struct frame_t {
 
 int get_port (int address, int type);
 
-void frame_init (frame_t frame);
+int send_message (frame_t *frame, int address);
 
-int send_message (frame_t frame, int address);
-
-int recieve_message (frame_t frame, int address);
+int recieve_message (frame_t *frame, int address);
 
 #endif
