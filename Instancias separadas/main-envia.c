@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "mensagem.h"
+#include "dados.h"
 
 #define TAM_MSG 63
 #define TAM_MIN 14
@@ -21,8 +22,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     // lo: LOOPBACK(Maquina envia pra si mesma)
-    int s = cria_raw_socket("lo");
-    int t = cria_raw_socket("lo");
+    int socket_send = cria_raw_socket("lo");
+    int socket_recv = cria_raw_socket("lo");
 
     char buffer[TAM_MSG + OFFSET];
     char bufferRecv[TAM_MSG + OFFSET];
@@ -30,14 +31,15 @@ int main(int argc, char *argv[]) {
     FILE* arq1 = fopen(argv[1], "r");
     /* printf("insira o nome do arquivo de saida: ");
     scanf("%s", arqsaida); */
-    FILE* arq2 = fopen("teste.jpg", "w+");
+    // FILE* arq2 = fopen("teste.jpg", "w+");
 
     char c;
     int seq = 0;
     int modo = M_ENVIA;
     int fimMsg = 0;
     int termina = 0;
-    while (!termina) {
+    envia_dados(socket_send, socket_recv, buffer, &seq, bufferRecv, arq1);
+    /* while (!termina) {
         if (modo == M_ENVIA) {
             size_t leituraArq = fread(buffer + OFFSET, 1, sizeof buffer - OFFSET, arq1);
             prepara_mensagem(buffer, 0x7f, leituraArq, seq, DADOS);
@@ -114,7 +116,7 @@ int main(int argc, char *argv[]) {
         }
         // fwrite(buffer, leituraArq, 1, arq2);
         // sleep(1);
-    }
+    } */
 
     // indicador temporario pro fim da mensagem
 /*    buffer[0] = 0x7f;
@@ -123,5 +125,5 @@ int main(int argc, char *argv[]) {
     int envio = send(s, buffer, 14, 0);
     envio = send(s, buffer, 14, 0); */
     fclose(arq1);
-    fclose(arq2);
+    // fclose(arq2);
 }

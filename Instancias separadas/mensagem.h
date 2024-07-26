@@ -1,6 +1,7 @@
-#ifndef MENSAGEM
-#define MENSAGEM
+#ifndef MENSAGEM_H
+#define MENSAGEM_H
 
+// Tipos de mensagem
 #define ACK 0b00000
 #define NACK 0b00001
 #define LISTA 0b01010
@@ -11,8 +12,19 @@
 #define FIM_TX 0b11110
 #define ERRO 0b11111
 
+// Estados
 #define M_ENVIA 0
 #define M_RECEBE 1
+#define ENVIA_DADOS 0
+#define RECEBE_DADOS 1
+#define ENVIA_LISTA 2
+#define RECEBE_LISTA 3
+#define ESPERA 4
+
+// Gerencial
+#define TAM_MSG 63
+#define TAM_MIN 14
+#define OFFSET 3
 
 int cria_raw_socket(char* nome_interface_rede);
 
