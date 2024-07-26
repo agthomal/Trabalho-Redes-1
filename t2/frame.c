@@ -42,13 +42,7 @@ int get_port (int address, int type) {
     return 0;
 }
 
-void frame_init (frame_t frame) {
-    frame.status = 0;
-
-    send_message (frame, 0);
-}
-
-int send_message (frame_t frame, int address) {
+int send_message (frame_t *frame, int address) {
     int type = 0;
     int sockfd;
     struct sockaddr_in dest_addr;
@@ -64,7 +58,7 @@ int send_message (frame_t frame, int address) {
     
     dest_addr.sin_port = htons (get_port (address, type));
 
-    if (sendto (sockfd, &frame, sizeof (frame), 0, (struct sockaddr *) &dest_addr, 
+    if (sendto (sockfd, frame, sizeof (*frame), 0, (struct sockaddr *) &dest_addr, 
         sizeof (dest_addr)) < 0) {
             perror("erro ao enviar mensagem");
             exit(0);
@@ -79,7 +73,7 @@ int send_message (frame_t frame, int address) {
     return 1;
 }
 
-int recieve_message (frame_t frame, int address) {
+int recieve_message (frame_t *frame, int address) {
     int type = 1;
     int sockfd, n;
     struct sockaddr_in dest_addr, src_addr;
@@ -101,11 +95,11 @@ int recieve_message (frame_t frame, int address) {
         exit(0);
     }
     
-    n = recvfrom (sockfd, &frame, sizeof (frame), 0, (struct sockaddr *) &src_addr, &src_len);
+    n = recvfrom (sockfd, frame, sizeof (*frame), 0, (struct sockaddr *) &src_addr, &src_len);
     
     #ifdef DEBUG
     printf ("# pacote recebido\n");
-    #endif
+    #endif 
 
     if (n < 0) {
         perror ("erro ao receber mensagem");
@@ -113,30 +107,36 @@ int recieve_message (frame_t frame, int address) {
     }
 
     else {
-        if (frame.status == 0) {
+        if (frame -> status == 0) {
             send_message (frame, address);
         }
 
         else {
-            if (frame.source == address) {
-                if (frame.received) {
+            if (frame -> source == address) {
+                if (frame -> received) {
                     #ifdef DEBUG
                     printf ("# pacote retornou\n");
                     #endif
                 }
+
+                frame -> status = 0;
+
+                send_message (frame, address);
             }
 
-            else if (frame.destination == address) {
-                if (frame.type == CARD) {
-                    frame.received = 1;
+            else if (frame -> destination == address) {
+                if (frame -> type == CARD) {
+                    frame -> received = 1;
 
-                    print_card (frame.data.card);
+                    print_card (frame -> data.card);
 
                     send_message (frame, address);
                 }
 
-                else if (frame.type == MESSAGE) {
-                    printf ("%s", frame.data.message);
+                else if (frame -> type == PRINT) {
+                    frame -> received = 1;
+
+                    printf ("%s", frame -> data.print);
 
                     send_message (frame, address);
                 }

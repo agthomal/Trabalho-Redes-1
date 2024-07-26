@@ -18,13 +18,13 @@ int suits[4]   = {1, 2, 3, 4};
 void print_card (card_t current_card) {
     char suit_draw[4];
 
-    if      (suits[current_card.suit] == 0) 
+    if      (suits[current_card.suit] == 1) 
         strcpy (suit_draw, "♦");
-    else if (suits[current_card.suit] == 1) 
-        strcpy (suit_draw, "♠");
     else if (suits[current_card.suit] == 2) 
+        strcpy (suit_draw, "♠");
+    else if (suits[current_card.suit] == 3) 
         strcpy (suit_draw, "♥");
-    else 
+    else if (suits[current_card.suit] == 4)
         strcpy (suit_draw, "♣");
 
     printf ("| %c   %s |\n", (char) values[current_card.value], suit_draw);
@@ -34,10 +34,11 @@ int verify_card (card_t *used_cards, card_t current_card) {
     int i = 0;
 
     while (used_cards[i].value != -1) {
-        if (used_cards -> value == current_card.value &&
-            used_cards -> suit  == current_card.suit) {
+        if (used_cards[i].value == current_card.value &&
+            used_cards[i].suit  == current_card.suit) {
                 return 0;
         }
+
         i++;
 
         if (i == 20)

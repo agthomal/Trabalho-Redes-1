@@ -28,3 +28,14 @@ n_rounds = max{5, 5, 5, 5}
 n_wins[4]
 current_round
 card_t cards
+
+0> 5*address + 0
+1> 5 + 0
+2> 10 + 0
+3> 15 + 0
+
+while (1) {
+    recieve ()
+
+    frame.status 1
+}
