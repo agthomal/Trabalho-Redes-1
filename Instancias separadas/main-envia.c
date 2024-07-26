@@ -36,18 +36,17 @@ int main(int argc, char *argv[]) {
     int seq = 0;
     int modo = M_ENVIA;
     int fimMsg = 0;
-    int breakLoop = 0;
-    while (!breakLoop) {
+    int termina = 0;
+    while (!termina) {
         if (modo == M_ENVIA) {
             size_t leituraArq = fread(buffer + OFFSET, 1, sizeof buffer - OFFSET, arq1);
             prepara_mensagem(buffer, 0x7f, leituraArq, seq, DADOS);
-            seq++;
-            if (seq >= 32)
-                seq = 0;
+            seq = (seq + 1) % 32;
+
             buffer[leituraArq + OFFSET] = '\0';
 
             if (leituraArq == 0) {
-                seq--;
+                seq = (seq - 1) % 32;
                 prepara_mensagem(buffer, 0x7f, leituraArq, seq, FIM_TX);
                 fimMsg = 1;
             }
@@ -59,6 +58,10 @@ int main(int argc, char *argv[]) {
             int envio;
             if (strlen(buffer) != 0) {
                 envio = send(s, buffer, TAM_MSG + OFFSET, 0);
+
+                int recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
+                recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
+
                 printf("%d\n", obtem_sequencia(buffer));
                 // printf("%s\n", buffer);
             }
@@ -82,11 +85,15 @@ int main(int argc, char *argv[]) {
                     // printf("ACK\n");
                     modo = M_ENVIA;
                     if (fimMsg)
-                        breakLoop = 1;
+                        termina = 1;
                     break;
                 case NACK:
                     // printf("NACK\n");
                     int envio = send(s, buffer, TAM_MSG + OFFSET, 0);
+
+                    // loopback
+                    recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
+                    recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
                     break;
                 case LISTA:
                     break;

@@ -49,18 +49,9 @@ int main(int argc, char *argv[]) {
             //
             //
             if (recebe != -1) {
-                // printf("inicio = %x\n", buffer[0]);
-                // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
                 recebe = recebe_mensagem(t, 200, buffer, TAM_MSG + OFFSET);
             }
 
-            if ((obtem_tipo(buffer) == ACK || obtem_tipo(buffer) == NACK) && recebe != -1) {
-                if (obtem_tipo(buffer) == ACK)
-                    printf ("ack\n");
-                if (obtem_tipo(buffer) == NACK)
-                    printf("nack\n");
-                continue;
-            }
             if (recebe != -1)
                 printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
 
@@ -69,11 +60,8 @@ int main(int argc, char *argv[]) {
                 printf("ordem errada; ordem atual deve ser %d mas e %d\n", seqRec % 32, obtem_sequencia(buffer));
             }
 
-            if (recebe != -1) {
-                seqRec++;
-                if (seqRec > 31)
-                    seqRec = 0;
-            }
+            if (recebe != -1)
+                seqRec = (seqRec + 1) % 32;
 
             if (obtem_tipo(buffer) == FIM_TX) {
                 printf("acabou\n");
@@ -98,15 +86,18 @@ int main(int argc, char *argv[]) {
         else {
             printf("envia\n");
             prepara_mensagem(bufferSend, 0x7f, 0, seq, tipo_msg);
-            seq++;
-            if (seq >= 32)
-                seq = 0;
+            seq = (seq + 1) % 32;
 
             int envio;
             envio = send(s, bufferSend, TAM_MSG + OFFSET, 0);
             // printf("%d\n", obtem_sequencia(bufferSend));
             // printf("recebe\n");
             modo = M_RECEBE;
+
+            // necessario pro loopback
+            int recebe = recebe_mensagem(t, 200, buffer, TAM_MSG + OFFSET);
+            recebe = recebe_mensagem(t, 200, buffer, TAM_MSG + OFFSET);
+
             if (termina)
                 break;
         }
