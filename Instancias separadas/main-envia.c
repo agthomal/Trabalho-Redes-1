@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
     int socket_send = cria_raw_socket("lo");
     int socket_recv = cria_raw_socket("lo");
 
-    char buffer[TAM_MSG + OFFSET];
-    char bufferRecv[TAM_MSG + OFFSET];
+    unsigned char buffer[TAM_MSG + OFFSET + TAM_EXTRA];
+    unsigned char bufferRecv[TAM_MSG + OFFSET + TAM_EXTRA];
 
     FILE* arq1 = fopen(argv[1], "r");
     /* printf("insira o nome do arquivo de saida: ");

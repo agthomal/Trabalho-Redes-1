@@ -9,6 +9,23 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "mensagem.h"
+
+void insere(unsigned char s[], int tam_max, int posicao) {
+    int i;
+    for (i = tam_max - 1; i > posicao + 1; i--) {
+        s[i] = s[i - 1];
+    }
+    s[i] = 0xff;
+    // s[i] = '0';
+}
+
+void retira(unsigned char s[], int tam_max, int posicao) {
+    // printf("%c\n", s[posicao + 1]);
+    for (int i = posicao + 1; i < tam_max - 2; i++)
+        s[i] = s[i + 1];
+}
+
 int cria_raw_socket(char* nome_interface_rede) {
     // Cria arquivo para o socket sem qualquer protocolo
     int soquete = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
@@ -56,13 +73,22 @@ int protocolo_e_valido(char* buffer, int tamanho_buffer) {
 }
  
 // retorna -1 se deu timeout, ou quantidade de bytes lidos
-int recebe_mensagem(int soquete, int timeoutMillis, char* buffer, int tamanho_buffer) {
+int recebe_mensagem(int soquete, int timeoutMillis, unsigned char* buffer, int tamanho_buffer) {
     long long comeco = timestamp();
     struct timeval timeout = { .tv_sec = timeoutMillis/1000, .tv_usec = (timeoutMillis%1000) * 1000 };
     setsockopt(soquete, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
     int bytes_lidos;
     do {
         bytes_lidos = recv(soquete, buffer, tamanho_buffer, 0);
+        //printf("tamanho = %d; antes: %s\n", obtem_tamanho(buffer), buffer);
+        if (bytes_lidos > 0) {
+            for (int i = 0; i < TAM_MSG + OFFSET + TAM_EXTRA - 1; i++) {
+                if (buffer[i] == 0x81 || buffer[i] == 0x88) {
+                    retira(buffer, TAM_MSG + OFFSET + TAM_EXTRA - 1, i);
+                }
+            }
+        }
+        //printf("agora: %s\n", buffer);
         if (protocolo_e_valido(buffer, bytes_lidos)) { return bytes_lidos; }
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;
@@ -77,6 +103,14 @@ void prepara_mensagem(unsigned char msg[], unsigned char marcador, unsigned char
     aux = sequencia << 5;
     aux += tipo;
     msg[2] = aux;
+
+    //printf("tamanho = %d; antes: %s\n", obtem_tamanho(msg), msg);
+    for(int i = 0; i < TAM_MSG + OFFSET + TAM_EXTRA - 1; i++) {
+        if (msg[i] == 0x81 || msg[i] == 0x88) {
+            insere(msg, TAM_MSG + OFFSET + TAM_EXTRA - 1, i);
+        }
+    }
+    //printf("agora: %s\n", msg);
 }
 
 unsigned char obtem_tamanho(unsigned char msg[]) {

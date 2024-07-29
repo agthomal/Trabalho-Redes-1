@@ -25,6 +25,7 @@
 #define TAM_MSG 63
 #define TAM_MIN 14
 #define OFFSET 3
+#define TAM_EXTRA 70
 
 int cria_raw_socket(char* nome_interface_rede);
 
@@ -32,7 +33,7 @@ long long timestamp();
 
 int protocolo_e_valido(char* buffer, int tamanho_buffer);
 
-int recebe_mensagem(int soquete, int timeoutMillis, char* buffer, int tamanho_buffer);
+int recebe_mensagem(int soquete, int timeoutMillis, unsigned char* buffer, int tamanho_buffer);
 
 void prepara_mensagem(unsigned char msg[], unsigned char marcador, unsigned char tamanho, unsigned char sequencia, unsigned char tipo);
 
