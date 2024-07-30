@@ -38,11 +38,7 @@ int verify_card (card_t *used_cards, card_t current_card) {
             used_cards[i].suit  == current_card.suit) {
                 return 0;
         }
-
         i++;
-
-        if (i == 20)
-            break;
     }
 
     return 1;
