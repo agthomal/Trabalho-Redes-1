@@ -136,7 +136,7 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
             modo = M_ENVIA;
         }
         else {
-            //printf("envia\n");
+            // printf("buffer send = %s\n", bufferSend);
             prepara_mensagem(bufferSend, 0x7f, 0, *seq, tipo_msg);
             *seq = (*seq + 1) % 32;
 

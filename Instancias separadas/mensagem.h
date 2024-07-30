@@ -27,11 +27,13 @@
 #define OFFSET 3
 #define TAM_EXTRA 70
 
+#define EQ_CRC 0xd5
+
 int cria_raw_socket(char* nome_interface_rede);
 
 long long timestamp();
 
-int protocolo_e_valido(char* buffer, int tamanho_buffer);
+int protocolo_e_valido(unsigned char* buffer, int tamanho_buffer);
 
 int recebe_mensagem(int soquete, int timeoutMillis, unsigned char* buffer, int tamanho_buffer);
 
@@ -42,5 +44,7 @@ unsigned char obtem_tamanho(unsigned char msg[]);
 unsigned char obtem_sequencia(unsigned char msg[]);
 
 unsigned char obtem_tipo(unsigned char msg[]);
+
+unsigned char obtem_crc(unsigned char msg[]);
 
 #endif
