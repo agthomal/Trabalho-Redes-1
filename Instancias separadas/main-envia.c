@@ -17,10 +17,6 @@
 #define OFFSET 3
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Inserir arquivo no argumento\n");
-        return 0;
-    }
     // lo: LOOPBACK(Maquina envia pra si mesma)
     int socket_send = cria_raw_socket("lo");
     int socket_recv = cria_raw_socket("lo");
@@ -28,102 +24,86 @@ int main(int argc, char *argv[]) {
     unsigned char buffer[TAM_MSG + OFFSET + TAM_EXTRA];
     unsigned char bufferRecv[TAM_MSG + OFFSET + TAM_EXTRA];
 
-    FILE* arq1 = fopen(argv[1], "r");
+    FILE* arq1;
     /* printf("insira o nome do arquivo de saida: ");
     scanf("%s", arqsaida); */
     // FILE* arq2 = fopen("teste.jpg", "w+");
 
     char c;
     int seq = 0;
-    int modo = M_ENVIA;
+    int modo = M_RECEBE;
     int fimMsg = 0;
     int termina = 0;
-    envia_dados(socket_send, socket_recv, buffer, &seq, bufferRecv, arq1);
-    /* while (!termina) {
-        if (modo == M_ENVIA) {
-            size_t leituraArq = fread(buffer + OFFSET, 1, sizeof buffer - OFFSET, arq1);
-            prepara_mensagem(buffer, 0x7f, leituraArq, seq, DADOS);
-            seq = (seq + 1) % 32;
-
-            buffer[leituraArq + OFFSET] = '\0';
-
-            if (leituraArq == 0) {
-                seq = (seq - 1) % 32;
-                prepara_mensagem(buffer, 0x7f, leituraArq, seq, FIM_TX);
-                fimMsg = 1;
-            }
-            if (leituraArq < TAM_MSG) {
-                for (int i = leituraArq + OFFSET; i < OFFSET + TAM_MSG; i++)
-                    buffer[i] = '\0';
-            }
-
-            int envio;
-            if (strlen(buffer) != 0) {
-                envio = send(s, buffer, TAM_MSG + OFFSET, 0);
-
-                int recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
-                recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
-
-                printf("%d\n", obtem_sequencia(buffer));
-                // printf("%s\n", buffer);
-            }
-            modo = M_RECEBE;
-            // sleep(1);
-        }
-        else {
-            int recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
+    int tipoMsg;
+    for(;;) {
+        if (modo == M_RECEBE) {
+            // printf("recebe\n");
+            int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET);
             //
             //
             // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
             //
             //
             if (recebe != -1) {
-                recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
+                recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET);
             }
-            if (recebe == -1 || strlen(bufferRecv) == 0)
+            if (strlen(bufferRecv) == 0) {
                 continue;
-            switch (obtem_tipo(bufferRecv)) {
-                case ACK:
-                    // printf("ACK\n");
-                    modo = M_ENVIA;
-                    if (fimMsg)
-                        termina = 1;
-                    break;
-                case NACK:
-                    // printf("NACK\n");
-                    int envio = send(s, buffer, TAM_MSG + OFFSET, 0);
+            }
+            if (recebe == -1) {
+                // printf("chegou errado\n");
+                tipoMsg = NACK;
+                modo = M_ENVIA;
+                continue;
+            }
 
-                    // loopback
-                    recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
-                    recebe = recebe_mensagem(t, 200, bufferRecv, TAM_MSG + OFFSET);
-                    break;
-                case LISTA:
-                    break;
-                case BAIXAR:
-                    break;
-                case MOSTRA:
-                    break;
-                case DESCRITOR:
-                    break;
-                case DADOS:
-                    printf("recebeu dados\n");
-                    break;
-                case FIM_TX:
-                    break;
-                case ERRO:
-                    break;
+            if (obtem_tipo(bufferRecv) == BAIXAR) {
+                // printf("chegou certo\n");
+                // recebe_dados(socket_send, socket_recv, bufferRecv, &seq, &seqRec, bufferSend, arq1);
+                tipoMsg = ACK;
+                modo = M_ENVIA;
+                continue;
             }
         }
-        // fwrite(buffer, leituraArq, 1, arq2);
-        // sleep(1);
-    } */
+        else if (modo == M_ENVIA) {
+            // printf("agora envia\n");
+            int envia;
+            // printf("buffer send = %s\n", bufferSend);
+            prepara_mensagem(buffer, 0x7f, 0, seq, tipoMsg);
+            // seq = (seq + 1) % 32;
 
-    // indicador temporario pro fim da mensagem
-/*    buffer[0] = 0x7f;
-    buffer[1] = 0x04;
-    buffer[2] = '\0';
-    int envio = send(s, buffer, 14, 0);
-    envio = send(s, buffer, 14, 0); */
-    fclose(arq1);
+            int envio;
+            sleep(1);
+            envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
+            // printf("%d\n", obtem_sequencia(bufferSend));
+            // printf("recebe\n");
+            modo = M_RECEBE;
+
+            char arqNome[63];
+            strcpy(arqNome, bufferRecv + OFFSET);
+            arqNome[strlen(arqNome) - 1] = '\0';
+
+            // necessario pro loopback
+            int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+            recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+
+            if (tipoMsg == ACK) {
+                printf("oi: %s\n", arqNome);
+                arq1 = fopen(arqNome, "r");
+                if (arq1 == NULL)
+                    printf("problemas\n");
+                // sleep(2);
+                printf("atual seq: %d\n", seq);
+
+                seq = 0;
+
+                envia_dados(socket_send, socket_recv, buffer, &seq, bufferRecv, arq1);
+                fclose(arq1);
+                printf("Terminou de enviar.\n");
+            }
+        }
+    }
+    // envia_dados(socket_send, socket_recv, buffer, &seq, bufferRecv, arq1);
+    // fclose(arq1);
     // fclose(arq2);
 }
