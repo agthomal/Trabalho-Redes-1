@@ -14,8 +14,8 @@
 
 int main(int argc, char *argv[]) {
     // lo: LOOPBACK(Maquina envia pra si mesma)
-    int socket_recv = cria_raw_socket("lo");
-    int socket_send = cria_raw_socket("lo");
+    int socket_recv = cria_raw_socket("enx000ec61e3fa1");
+    int socket_send = cria_raw_socket("enx000ec61e3fa1");
 
     unsigned char buffer[TAM_MSG + OFFSET + TAM_EXTRA];
     unsigned char bufferSend[TAM_MSG + OFFSET + TAM_EXTRA];
@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
                     envio = send(socket_send, bufferSend, TAM_MSG + OFFSET + TAM_EXTRA, 0);
 
                     // necessario pro loopback
-                    int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
-                    recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
                     modo = M_RECEBE;
                 }
                 else {
@@ -65,9 +65,9 @@ int main(int argc, char *argv[]) {
                     // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
                     //
                     //
-                    if (recebe != -1) {
+                    /* if (recebe != -1) {
                         recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET);
-                    }
+                    } */
                     if (recebe == -1 || strlen(buffer) == 0)
                         continue;
                     if (obtem_tipo(buffer) == ACK) {

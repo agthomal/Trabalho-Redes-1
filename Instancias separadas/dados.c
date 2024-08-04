@@ -38,8 +38,8 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
             if (strlen(buffer) != 0) {
                 envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
 
-                int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
-                recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+                // int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+                // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
 
                 // printf("%d\n", obtem_sequencia(buffer));
                 // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
@@ -54,9 +54,9 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
             // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
             //
             //
-            if (recebe != -1) {
+            /* if (recebe != -1) {
                 recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
-            }
+            } */
             if (recebe == -1 || strlen(bufferRecv) == 0)
                 continue;
             switch (obtem_tipo(bufferRecv)) {
@@ -71,8 +71,8 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
                     int envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
 
                     // loopback
-                    recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
-                    recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
                     break;
                 case ERRO:
                     break;
@@ -98,13 +98,16 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
             // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
             //
             //
-            if (recebe != -1) {
+            /* if (recebe != -1) {
                 recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
-            }
+            } */
 
             // if (recebe != -1)
                 // printf("buffer = %s\n", buffer + 3);
                 // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
+            
+            if (obtem_tipo(buffer) == ACK || obtem_tipo(buffer) == NACK)
+                continue;
 
             if (*seqRec % 32 != obtem_sequencia(buffer)) {
                 recebe = -1;
@@ -147,8 +150,8 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
             modo = M_RECEBE;
 
             // necessario pro loopback
-            int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
-            recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+            // int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+            // recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
 
             if (termina)
                 break;

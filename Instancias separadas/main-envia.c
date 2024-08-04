@@ -18,8 +18,8 @@
 
 int main(int argc, char *argv[]) {
     // lo: LOOPBACK(Maquina envia pra si mesma)
-    int socket_send = cria_raw_socket("lo");
-    int socket_recv = cria_raw_socket("lo");
+    int socket_send = cria_raw_socket("enx000ec61e3fa1");
+    int socket_recv = cria_raw_socket("enx000ec61e3fa1");
 
     unsigned char buffer[TAM_MSG + OFFSET + TAM_EXTRA];
     unsigned char bufferRecv[TAM_MSG + OFFSET + TAM_EXTRA];
@@ -44,10 +44,11 @@ int main(int argc, char *argv[]) {
             // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
             //
             //
-            if (recebe != -1) {
+            /* if (recebe != -1) {
                 recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET);
-            }
+            } */
             if (strlen(bufferRecv) == 0) {
+                // printf("chegou vazio\n");
                 continue;
             }
             if (recebe == -1) {
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]) {
             }
 
             if (obtem_tipo(bufferRecv) == BAIXAR) {
-                // printf("chegou certo\n");
+                printf("chegou certo\n");
                 // recebe_dados(socket_send, socket_recv, bufferRecv, &seq, &seqRec, bufferSend, arq1);
                 tipoMsg = ACK;
                 modo = M_ENVIA;
@@ -84,8 +85,8 @@ int main(int argc, char *argv[]) {
             arqNome[strlen(arqNome) - 1] = '\0';
 
             // necessario pro loopback
-            int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
-            recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+            // int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+            // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
 
             if (tipoMsg == ACK) {
                 printf("oi: %s\n", arqNome);
