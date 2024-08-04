@@ -14,8 +14,8 @@
 
 int main(int argc, char *argv[]) {
     // lo: LOOPBACK(Maquina envia pra si mesma)
-    int socket_recv = cria_raw_socket("enx000ec61e3fa1");
-    int socket_send = cria_raw_socket("enx000ec61e3fa1");
+    int socket_recv = cria_raw_socket("enx000ec61e4a99");
+    int socket_send = cria_raw_socket("enx000ec61e4a99");
 
     unsigned char buffer[TAM_MSG + OFFSET + TAM_EXTRA];
     unsigned char bufferSend[TAM_MSG + OFFSET + TAM_EXTRA];
