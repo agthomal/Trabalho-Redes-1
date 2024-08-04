@@ -37,7 +37,51 @@ int main(int argc, char *argv[]) {
         //Pegar o newline
         fgets(nomeArq, 60, stdin);
         if (entrada == '1') {
-            printf("Ainda a ser adicionado\n");
+            // printf("Ainda a ser adicionado\n");
+            for (;;) {
+                if (modo == M_ENVIA) {
+                    strcpy(bufferSend + OFFSET, nomeArq);
+                    prepara_mensagem(bufferSend, 0x7f, strlen(nomeArq), seq, LISTA);
+                    seq = (seq + 1) % 32;
+
+                    int envio;
+                    envio = send(socket_send, bufferSend, TAM_MSG + OFFSET + TAM_EXTRA, 0);
+
+                    // necessario pro loopback
+                    // int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+                    modo = M_RECEBE;
+                }
+                else {
+                    int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET);
+                    //
+                    //
+                    // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
+                    //
+                    //
+                    /* if (recebe != -1) {
+                        recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET);
+                    } */
+                    if (recebe == -1 || strlen(buffer) == 0)
+                        continue;
+                    if (obtem_tipo(buffer) == ACK) {
+                        printf("Obtendo lista...\n");
+                        // rewind(arq1);
+                        // seqRec = (obtem_sequencia(buffer) + 1) % 32;
+
+                        seqRec = 0;
+                        // recebe_dados(socket_send, socket_recv, buffer, &seq, &seqRec, bufferSend, arq1);
+                        recebe_lista(socket_send, socket_recv, buffer, &seq, &seqRec, bufferSend);
+
+                        modo = M_ENVIA;
+                        break;
+                    }
+                    else if (obtem_tipo(buffer) == NACK) {
+                        // seqRec = (obtem_sequencia(buffer) + 1) % 32;
+                        modo = M_ENVIA;
+                    }
+                }
+            }
         }
         else if (entrada == '2') {
             printf("Insira o nome do video a ser instalado:\n");

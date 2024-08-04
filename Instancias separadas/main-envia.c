@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
     int fimMsg = 0;
     int termina = 0;
     int tipoMsg;
+    int tipoEnvio;
     for(;;) {
         if (modo == M_RECEBE) {
             // printf("recebe\n");
@@ -63,6 +64,14 @@ int main(int argc, char *argv[]) {
                 // recebe_dados(socket_send, socket_recv, bufferRecv, &seq, &seqRec, bufferSend, arq1);
                 tipoMsg = ACK;
                 modo = M_ENVIA;
+                tipoEnvio = BAIXAR;
+                continue;
+            }
+            if (obtem_tipo(bufferRecv) == LISTA) {
+                printf("chegou certo\n");
+                tipoMsg = ACK;
+                modo = M_ENVIA;
+                tipoEnvio = LISTA;
                 continue;
             }
         }
@@ -89,18 +98,24 @@ int main(int argc, char *argv[]) {
             // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
 
             if (tipoMsg == ACK) {
-                printf("oi: %s\n", arqNome);
-                arq1 = fopen(arqNome, "r");
-                if (arq1 == NULL)
-                    printf("problemas\n");
-                // sleep(2);
-                printf("atual seq: %d\n", seq);
+                if (tipoEnvio == BAIXAR) {
+                    printf("oi: %s\n", arqNome);
+                    arq1 = fopen(arqNome, "r");
+                    if (arq1 == NULL)
+                        printf("problemas\n");
+                    // sleep(2);
+                    printf("atual seq: %d\n", seq);
 
-                seq = 0;
+                    seq = 0;
 
-                envia_dados(socket_send, socket_recv, buffer, &seq, bufferRecv, arq1);
-                fclose(arq1);
-                printf("Terminou de enviar.\n");
+                    envia_dados(socket_send, socket_recv, buffer, &seq, bufferRecv, arq1);
+                    fclose(arq1);
+                    printf("Terminou de enviar.\n");
+                }
+                if (tipoEnvio == LISTA) {
+                    seq = 0;
+                    envia_lista(socket_send, socket_recv, buffer, &seq, bufferRecv);
+                }
             }
         }
     }
