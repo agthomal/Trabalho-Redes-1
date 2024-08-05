@@ -29,6 +29,8 @@
 
 #define EQ_CRC 0xd5
 
+void copia_todos(unsigned char a[], unsigned char b[], int tam);
+
 int cria_raw_socket(char* nome_interface_rede);
 
 long long timestamp();

@@ -179,36 +179,43 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
     int fimMsg = 0;
     int termina = 0;
     int modo = M_ENVIA;
+    int cont = 0;
     while (!termina) {
         if (modo == M_ENVIA) {
-            size_t leituraArq = fread(buffer + OFFSET, 1, TAM_MSG, arqRecebe);
-            prepara_mensagem(buffer, 0x7f, leituraArq, *seq, DADOS);
-            *seq = (*seq + 1) % 32;
+            for (int i = 0; i < TAM_JANELA; i++) {
+                size_t leituraArq = fread(buffer + OFFSET, 1, TAM_MSG, arqRecebe);
+                prepara_mensagem(buffer, 0x7f, leituraArq, *seq, DADOS);
+                *seq = (*seq + 1) % 32;
 
-            // buffer[leituraArq + OFFSET] = '\0';
+                // buffer[leituraArq + OFFSET] = '\0';
 
-            if (leituraArq == 0) {
-                *seq = (*seq - 1) % 32;
-                prepara_mensagem(buffer, 0x7f, leituraArq, *seq, FIM_TX);
-                fimMsg = 1;
-            }
-            /* if (leituraArq < TAM_MSG) {
-                for (int i = leituraArq + OFFSET; i < OFFSET + TAM_MSG; i++)
-                    buffer[i] = '\0';
-            } */
+                if (leituraArq == 0) {
+                    *seq = (*seq - 1) % 32;
+                    prepara_mensagem(buffer, 0x7f, leituraArq, *seq, FIM_TX);
+                    fimMsg = 1;
+                }
+                /* if (leituraArq < TAM_MSG) {
+                    for (int i = leituraArq + OFFSET; i < OFFSET + TAM_MSG; i++)
+                        buffer[i] = '\0';
+                } */
 
-            int envio;
-            if (strlen(buffer) != 0) {
-                envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
+                int envio;
+                if (strlen(buffer) != 0) {
+                    envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
+                    cont++;
 
-                // int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
-                // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
+                    // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
 
-                // printf("%d\n", obtem_sequencia(buffer));
-                // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
+                    printf("%d\n", obtem_sequencia(buffer));
+                    // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
+                }
+                // modo = M_RECEBE;
+                // sleep(1);
+                if (fimMsg)
+                    break;
             }
             modo = M_RECEBE;
-            // sleep(1);
         }
         else {
             int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
@@ -244,62 +251,84 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
             }
         }
     }
+    printf("%d\n", cont);
 }
 
 void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int *seqRec, char bufferSend[], FILE* arqRecebe) {
     int modo = M_RECEBE;
     int tipo_msg;
     int termina = 0;
+    int cont = 0;
+    char buffer_ordena[TAM_JANELA][TAM_MSG + OFFSET + TAM_EXTRA];
     for (;;) {
         if (modo == M_RECEBE) {
-            // printf("recebe\n");
-            int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
-            if (strlen(buffer) == 0)
-                continue;
-            //
-            //
-            // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
-            //
-            //
-            /* if (recebe != -1) {
-                recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
-            } */
+            int i = 0;
+            while(i < TAM_JANELA) {
+                // printf("recebe\n");
+                int recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+                if (strlen(buffer) == 0)
+                    continue;
+                //
+                //
+                // IMPORTANTE: A MENSAGEM RECEBE DUAS VEZES PELA FORMA QUE O LOOPBACK FUNCIONA. TESTES DESSA PARTE VAO SER NECESSARIOS QUANDO TROCAR PRA DUAS MAQUINAS
+                //
+                //
+                /* if (recebe != -1) {
+                    recebe = recebe_mensagem(socket_recv, 200, buffer, TAM_MSG + OFFSET + TAM_EXTRA);
+                } */
 
-            // if (recebe != -1)
-                // printf("buffer = %s\n", buffer + 3);
-                // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
-            
-            if (obtem_tipo(buffer) == ACK || obtem_tipo(buffer) == NACK)
-                continue;
+                // if (recebe != -1)
+                    // printf("buffer = %s\n", buffer + 3);
+                    // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
+                
+                if (obtem_tipo(buffer) == ACK || obtem_tipo(buffer) == NACK)
+                    continue;
 
-            if (*seqRec % 32 != obtem_sequencia(buffer)) {
-                recebe = -1;
-                //printf("ordem errada; ordem atual deve ser %d mas e %d\n", *seqRec % 32, obtem_sequencia(buffer));
+                if (!(obtem_sequencia(buffer) == *seqRec % 32 || obtem_sequencia(buffer) == (*seqRec + 1) % 32 || obtem_sequencia(buffer) == (*seqRec + 2) % 32 || obtem_sequencia(buffer) == (*seqRec + 3) % 32 || obtem_sequencia(buffer) == (*seqRec + 4) % 32)) {
+                    recebe = -1;
+                    printf("ordem errada; ordem atual deve ser %d mas e %d\n", *seqRec % 32, obtem_sequencia(buffer));
+                }
+
+                /* if (recebe != -1)
+                    *seqRec = (*seqRec + 1) % 32; */
+
+                if (obtem_tipo(buffer) == FIM_TX) {
+                    //printf("acabou\n");
+                    termina = 1;
+                }
+
+                if (recebe != -1 && strlen(buffer) > 0) {
+                    cont++;
+                    i++;
+                    int ordem = ((obtem_sequencia(buffer)) - *seqRec + 32) % 32;
+                    if (((obtem_sequencia(buffer_ordena[ordem])) - *seqRec + 32) % 32 != ordem) {
+                        //printf("%d = %d - %d\n", ordem, obtem_sequencia(buffer), *seqRec);
+                        // strcpy(buffer_ordena[ordem], buffer);
+                        copia_todos(buffer_ordena[ordem], buffer, obtem_tamanho(buffer) + OFFSET);
+                    }
+                    // int tam = obtem_tamanho(buffer);
+                    // printf("Tamanho: %d\n", tam);
+                    // printf("escrevendo %s\n", buffer + 3);
+                    // fwrite(buffer + OFFSET, recebe - OFFSET, 1, arqRecebe);
+                    // fwrite(buffer + OFFSET, tam, 1, arqRecebe);
+                    // printf("Enviando ACK: %d %d %d\n", obtem_sequencia(buffer), *seqRec, recebe);
+                    tipo_msg = ACK;
+                    if (termina == 1)
+                        break;
+                }
+                else {
+                    // printf("%d %d %d\n", obtem_sequencia(buffer), *seqRec, recebe);
+                    tipo_msg = NACK;
+                }
+                // sleep(1);
             }
-
-            if (recebe != -1)
-                *seqRec = (*seqRec + 1) % 32;
-
-            if (obtem_tipo(buffer) == FIM_TX) {
-                //printf("acabou\n");
-                termina = 1;
-            }
-
-            if (recebe != -1 && strlen(buffer) > 0) {
-                int tam = obtem_tamanho(buffer);
-                //printf("Tamanho: %d\n", tam);
-                //printf("escrevendo %s\n", buffer + 3);
-                // fwrite(buffer + OFFSET, recebe - OFFSET, 1, arqRecebe);
-                fwrite(buffer + OFFSET, tam, 1, arqRecebe);
-                // printf("Enviando ACK: %d %d %d\n", obtem_sequencia(buffer), *seqRec, recebe);
-                tipo_msg = ACK;
-            }
-            else {
-                // printf("%d %d %d\n", obtem_sequencia(buffer), *seqRec, recebe);
-                tipo_msg = NACK;
-            }
-            // sleep(1);
             modo = M_ENVIA;
+            *seqRec = (*seqRec + 5) % 32;
+            for (int j = 0; j < i; j++) {
+                //printf("%s\n", buffer_ordena[j]);
+                int tam = obtem_tamanho(buffer_ordena[j]);
+                fwrite(buffer_ordena[j] + OFFSET, tam, 1, arqRecebe);
+            }
         }
         else {
             // printf("buffer send = %s\n", bufferSend);
@@ -320,4 +349,5 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
                 break;
         }
     }
+    printf("%d\n", cont);
 }
