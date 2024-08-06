@@ -53,14 +53,14 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             if (recebe == -1) {
-                printf("chegou errado\n");
+                // printf("chegou errado\n");
                 tipoMsg = NACK;
                 modo = M_ENVIA;
                 continue;
             }
 
             if (obtem_tipo(bufferRecv) == BAIXAR) {
-                printf("chegou certo\n");
+                // printf("chegou certo\n");
                 // recebe_dados(socket_send, socket_recv, bufferRecv, &seq, &seqRec, bufferSend, arq1);
                 tipoMsg = ACK;
                 modo = M_ENVIA;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             if (obtem_tipo(bufferRecv) == LISTA) {
-                printf("chegou certo\n");
+                // printf("chegou certo\n");
                 tipoMsg = ACK;
                 modo = M_ENVIA;
                 tipoEnvio = LISTA;
@@ -99,12 +99,12 @@ int main(int argc, char *argv[]) {
 
             if (tipoMsg == ACK) {
                 if (tipoEnvio == BAIXAR) {
-                    printf("oi: %s\n", arqNome);
+                    printf("Enviando arquivo: %s\n", arqNome);
                     arq1 = fopen(arqNome, "r");
                     if (arq1 == NULL)
-                        printf("problemas\n");
+                        // printf("problemas\n");
                     // sleep(2);
-                    printf("atual seq: %d\n", seq);
+                    // printf("atual seq: %d\n", seq);
 
                     seq = 0;
 
