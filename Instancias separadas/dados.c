@@ -180,6 +180,7 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
     int termina = 0;
     int modo = M_ENVIA;
     int cont = 0;
+    char janela[32][TAM_MSG + OFFSET + TAM_EXTRA];
     while (!termina) {
         if (modo == M_ENVIA) {
             for (int i = 0; i < TAM_JANELA; i++) {
@@ -201,13 +202,14 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
 
                 int envio;
                 if (strlen(buffer) != 0) {
+                    copia_todos(janela[obtem_sequencia(buffer)], buffer, TAM_MSG + OFFSET + TAM_EXTRA - 1);
+                    printf("enviando %d\n", obtem_sequencia(buffer));
                     envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
                     cont++;
 
                     // int recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
                     // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);
 
-                    printf("%d\n", obtem_sequencia(buffer));
                     // printf("tamanho: %d | sequencia: %d | tipo: %x\n", obtem_tamanho(buffer), obtem_sequencia(buffer), obtem_tipo(buffer));
                 }
                 // modo = M_RECEBE;
@@ -237,8 +239,14 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
                         termina = 1;
                     break;
                 case NACK:
-                    // printf("NACK\n");
-                    int envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
+                    printf("NACK de %d com seq %d\n", bufferRecv[OFFSET], obtem_sequencia(bufferRecv));
+                    // int envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
+                    
+                    int c = bufferRecv[OFFSET];
+                    for (int i = c; i != *seq; i = (i + 1) % 32) {
+                        // printf("reenviando %d\n", i);
+                        int envio = send(socket_send, janela[i], TAM_MSG + OFFSET + TAM_EXTRA, 0);
+                    }
 
                     // loopback
                     // recebe = recebe_mensagem(socket_recv, 200, bufferRecv, TAM_MSG + OFFSET + TAM_EXTRA);

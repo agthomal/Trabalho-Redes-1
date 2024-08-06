@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             if (recebe == -1) {
-                // printf("chegou errado\n");
+                printf("chegou errado\n");
                 tipoMsg = NACK;
                 modo = M_ENVIA;
                 continue;
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
             // seq = (seq + 1) % 32;
 
             int envio;
-            sleep(1);
+            // sleep(1);
             envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
             // printf("%d\n", obtem_sequencia(bufferSend));
             // printf("recebe\n");
