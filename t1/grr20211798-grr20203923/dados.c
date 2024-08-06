@@ -26,9 +26,9 @@ void envia_lista(int socket_send, int socket_recv, char buffer[], int *seq, char
     while ((dir = readdir(d)) != NULL) {
         char *nome = dir->d_name;
         nome = nome + strlen(nome) - 3;
-        if (strcmp(nome, "mp4") != 0)
+        if (strcmp(nome, "mp4") != 0 && strcmp(nome, "avi") != 0)
             continue;
-        printf("oi\n");
+        // printf("oi\n");
 
         int fimMsg = 0;
         int termina = 0;
@@ -38,18 +38,11 @@ void envia_lista(int socket_send, int socket_recv, char buffer[], int *seq, char
             prepara_mensagem(buffer, 0x7f, strlen(dir->d_name), *seq, MOSTRA);
             *seq = (*seq + 1) % 32;
 
-            /* if (leituraArq == 0) {
-                *seq = (*seq - 1) % 32;
-                prepara_mensagem(buffer, 0x7f, leituraArq, *seq, FIM_TX);
-                fimMsg = 1;
-            } */
-
             int envio;
             if (strlen(buffer) != 0) {
                 envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
             }
             modo = M_RECEBE;
-            // sleep(1);
             ack = 0;
         }
         else {
@@ -239,7 +232,7 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
                         termina = 1;
                     break;
                 case NACK:
-                    printf("NACK de %d com seq %d\n", bufferRecv[OFFSET], obtem_sequencia(bufferRecv));
+                    // printf("NACK de %d com seq %d\n", bufferRecv[OFFSET], obtem_sequencia(bufferRecv));
                     // int envio = send(socket_send, buffer, TAM_MSG + OFFSET + TAM_EXTRA, 0);
                     
                     int c = bufferRecv[OFFSET];
@@ -259,7 +252,7 @@ void envia_dados(int socket_send, int socket_recv, char buffer[], int *seq, char
             }
         }
     }
-    printf("%d\n", cont);
+    // printf("%d\n", cont);
 }
 
 void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int *seqRec, char bufferSend[], FILE* arqRecebe) {
@@ -294,7 +287,7 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
 
                 if (!(obtem_sequencia(buffer) == *seqRec % 32 || obtem_sequencia(buffer) == (*seqRec + 1) % 32 || obtem_sequencia(buffer) == (*seqRec + 2) % 32 || obtem_sequencia(buffer) == (*seqRec + 3) % 32 || obtem_sequencia(buffer) == (*seqRec + 4) % 32)) {
                     recebe = -1;
-                    printf("ordem errada; ordem atual deve ser %d mas e %d\n", *seqRec % 32, obtem_sequencia(buffer));
+                    // printf("ordem errada; ordem atual deve ser %d mas e %d\n", *seqRec % 32, obtem_sequencia(buffer));
                 }
 
                 /* if (recebe != -1)
@@ -357,5 +350,5 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
                 break;
         }
     }
-    printf("%d\n", cont);
+    // printf("%d\n", cont);
 }

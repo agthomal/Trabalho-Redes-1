@@ -119,7 +119,19 @@ int main(int argc, char *argv[]) {
                         // rewind(arq1);
                         // seqRec = (obtem_sequencia(buffer) + 1) % 32;
 
-                        arq1 = fopen("video.mp4", "w+");
+                        char extensao = nomeArq[strlen(nomeArq) - 1];
+                        if (extensao == '4')
+                            arq1 = fopen("video.mp4", "w+");
+
+                        else if (extensao == 'i')
+                            arq1 = fopen("video.avi", "w+");
+
+                        else {
+                            perror ("extensao invalida");
+                            exit (0);
+                        } 
+
+
                         seqRec = 0;
                         recebe_dados(socket_send, socket_recv, buffer, &seq, &seqRec, bufferSend, arq1);
                         fclose(arq1);
