@@ -26,7 +26,7 @@ void envia_lista(int socket_send, int socket_recv, char buffer[], int *seq, char
     while ((dir = readdir(d)) != NULL) {
         char *nome = dir->d_name;
         nome = nome + strlen(nome) - 3;
-        if (strcmp(nome, "mkv") != 0)
+        if (strcmp(nome, "mp4") != 0 && strcmp(nome, "avi") != 0)
             continue;
         printf("oi\n");
 
@@ -260,7 +260,7 @@ void recebe_dados(int socket_send, int socket_recv, char buffer[], int *seq, int
     int tipo_msg;
     int termina = 0;
     int cont = 0;
-    unsigned char buffer_ordena[TAM_JANELA][TAM_MSG + OFFSET + TAM_EXTRA];
+    char buffer_ordena[TAM_JANELA][TAM_MSG + OFFSET + TAM_EXTRA];
     for (;;) {
         if (modo == M_RECEBE) {
             int i = 0;
